@@ -9,7 +9,7 @@ class MFNetModel(BaseModel):
         parser.set_defaults(norm='batch', netG='MFNET_G', dataset_mode='font')
         
         if is_train:
-            parser.set_defaults(batch_size=32, pool_size=0, gan_mode='hinge', netD='basic_64')
+            parser.set_defaults(batch_size=192, pool_size=0, gan_mode='hinge', netD='basic_64')
             parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
             parser.add_argument('--lambda_style', type=float, default=1.0, help='weight for style loss')
             parser.add_argument('--lambda_content', type=float, default=1.0, help='weight for content loss')
@@ -57,6 +57,7 @@ class MFNetModel(BaseModel):
             self.lambda_L1 = opt.lambda_L1
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
+            self.criterionCI = torch.nn.BCELoss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
@@ -77,12 +78,14 @@ class MFNetModel(BaseModel):
         self.style_images = data['style_images'].to(self.device)
         if not self.isTrain:
             self.image_paths = data['image_paths']
+        self.content_lan = data['content_lan'].to(self.device)
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        self.generated_images, self.cnt_fea, self.cnt_fea_fake, self.sty_fea, self.sty_fea_fake = self.netG((self.content_images, self.style_images))
-        self.generated_images_from_cnt, _, _, _, _ = self.netG((self.content_images, self.content_images))
-        self.generated_images_from_sty, _, _, _, _ = self.netG((self.style_images[:, 0:1], self.style_images))
+        self.generated_images, self.cnt_fea, self.cnt_fea_fake, self.sty_fea, self.sty_fea_fake, self.alpha1, self.alpha2 = self.netG((self.content_images, self.style_images))
+
+        # self.generated_images_from_cnt, _, _, _, _ = self.netG((self.content_images, self.content_images))
+        # self.generated_images_from_sty, _, _, _, _ = self.netG((self.style_images[:, 0:1], self.style_images))
         # self.generated_images_from_sty, _, _, _, _ = self.netG((self.style_images.view(-1, 1, 64, 64), self.style_images.view(-1, 1, 64, 64)))
         
     def compute_gan_loss_D(self, real_images, fake_images, netD):
@@ -118,7 +121,7 @@ class MFNetModel(BaseModel):
     def backward_G(self):
         """Calculate loss for the generator"""
         # ===== Adversarial loss ===== #
-        # First, G(A) should fake the discriminator
+        # G(A) should fake the discriminator
         if self.dis_2:
             self.loss_G_content = self.compute_gan_loss_G([self.content_images, self.generated_images], self.netD_content)
             self.loss_G_style = self.compute_gan_loss_G([self.style_images, self.generated_images], self.netD_style)
@@ -127,22 +130,27 @@ class MFNetModel(BaseModel):
             self.loss_G_GAN = self.compute_gan_loss_G([self.content_images, self.style_images, self.generated_images], self.netD)
             
         # ===== L1 loss ===== #
-        # Second, G(A) = B
+        # G(A) = B
         self.loss_G_L1 = self.criterionL1(self.generated_images, self.gt_images) * self.opt.lambda_L1
 
         # ===== Encoder consistent loss ===== #
-        # Third, content (style) encoder should encode only the content (style) info and ignore the style (content) info
+        # content (style) encoder should encode only the content (style) info and ignore the style (content) info
         self.loss_cnt_embed = self.criterionL1(self.cnt_fea, self.cnt_fea_fake)
         self.loss_sty_embed = self.criterionL1(self.sty_fea, self.sty_fea_fake)
         self.enc_consistency_loss = 0.2*self.loss_cnt_embed + 0.2*self.loss_sty_embed
 
-        # ===== Generator reconstruction loss ===== #
-        # Forth, G(Ic, Ic) = Ic and G(Is, Is) = Is
-        self.G_rec_cnt_loss = self.criterionL1(self.generated_images_from_cnt, self.content_images)
-        self.G_rec_sty_loss = self.criterionL1(self.generated_images_from_sty, self.style_images[:, 0:1])
-        self.G_rec_loss = 0.1*self.G_rec_cnt_loss + 0.1*self.G_rec_sty_loss
+        # # ===== Generator reconstruction loss ===== #
+        # # G(Ic, Ic) = Ic and G(Is, Is) = Is
+        # self.G_rec_cnt_loss = self.criterionL1(self.generated_images_from_cnt, self.content_images)
+        # self.G_rec_sty_loss = self.criterionL1(self.generated_images_from_sty, self.style_images[:, 0:1])
+        # self.G_rec_loss = 0.1*self.G_rec_cnt_loss + 0.1*self.G_rec_sty_loss
 
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.enc_consistency_loss + self.G_rec_loss
+        # ===== Complexity indicator loss ===== #
+
+        self.loss_complex_ind = self.criterionCI(self.alpha1.squeeze(), (~self.content_lan.bool()).float()) + \
+                                self.criterionCI(self.alpha2.squeeze(), self.content_lan.float())
+
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.enc_consistency_loss + 0.1*self.loss_complex_ind #+ self.G_rec_loss
         self.loss_G.backward()
         
     def optimize_parameters(self):

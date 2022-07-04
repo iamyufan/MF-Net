@@ -1,3 +1,4 @@
+from unittest import skip
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -746,7 +747,7 @@ class LCA_Skip_Connection(nn.Module):
 
 		self.linear_ind = nn.Sequential(
 			nn.Linear(4*4, 1),
-			nn.ReLU(True),
+			nn.Sigmoid(),
 		)
 
 	def gaussian_blur(self, x, alpha):
@@ -804,7 +805,7 @@ class LCA_Skip_Connection(nn.Module):
 		kernel1 = self.linear_ind(self.conv_ind(feat_1).view(skip1.size(0),-1))
 		kernel2 = self.linear_ind(self.conv_ind(feat_2).view(skip2.size(0),-1))
 
-		return self.gaussian_blur(skip1, kernel1), self.gaussian_blur(skip1, kernel2)
+		return self.gaussian_blur(skip1, kernel1), self.gaussian_blur(skip2, kernel2), kernel1, kernel2
 
 
 class MFNet_Generator(nn.Module):
@@ -823,7 +824,7 @@ class MFNet_Generator(nn.Module):
         # Get the content feature
         cnt_fea, skip1, skip2 = self.content_encoder(cnt_img)
         ## Language-complexity aware skip connection
-        skip1, skip2 = self.LCA_skip_connection(skip1, skip2)
+        skip1, skip2, kernel1, kernel2 = self.LCA_skip_connection(skip1, skip2)
 
         # Get the style feature
         sty_fea = self.style_encoder(sty_imgs.view(-1, 1, 64, 64), B_s, K_s)
@@ -837,7 +838,7 @@ class MFNet_Generator(nn.Module):
         cnt_fea_fake, _, _ = self.content_encoder(gen_img)
         sty_fea_fake = self.style_encoder(gen_img, B_c, K_c)
         
-        return gen_img, cnt_fea, cnt_fea_fake, sty_fea, sty_fea_fake
+        return gen_img, cnt_fea, cnt_fea_fake, sty_fea, sty_fea_fake, kernel1, kernel2
 
 
 ######### SA-GAN #########
