@@ -4,3 +4,8 @@ checkpoints/*
 datasets/font/*
 *.pyc
 evaluator/checkpoints/*
+results/*
+evaluator/*
+evaluate.py
+evaluate.sh
+epoch_results.zip
