@@ -83,10 +83,10 @@ class MFNetModel(BaseModel):
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         self.generated_images, self.cnt_fea, self.cnt_fea_fake, self.sty_fea, self.sty_fea_fake, self.alpha1, self.alpha2 = self.netG((self.content_images, self.style_images))
-
-        # self.generated_images_from_cnt, _, _, _, _ = self.netG((self.content_images, self.content_images))
-        # self.generated_images_from_sty, _, _, _, _ = self.netG((self.style_images[:, 0:1], self.style_images))
-        # self.generated_images_from_sty, _, _, _, _ = self.netG((self.style_images.view(-1, 1, 64, 64), self.style_images.view(-1, 1, 64, 64)))
+        # for domain reconstruction loss
+        self.generated_images_from_cnt, _, _, _, _ = self.netG((self.content_images, self.content_images))
+        self.generated_images_from_sty, _, _, _, _ = self.netG((self.style_images[:, 0:1], self.style_images))
+        self.generated_images_from_sty, _, _, _, _ = self.netG((self.style_images.view(-1, 1, 64, 64), self.style_images.view(-1, 1, 64, 64)))
         
     def compute_gan_loss_D(self, real_images, fake_images, netD):
         # Fake
@@ -128,7 +128,7 @@ class MFNetModel(BaseModel):
             self.loss_G_GAN = self.lambda_content*self.loss_G_content + self.lambda_style*self.loss_G_style
         else:
             self.loss_G_GAN = self.compute_gan_loss_G([self.content_images, self.style_images, self.generated_images], self.netD)
-            
+        
         # ===== L1 loss ===== #
         # G(A) = B
         self.loss_G_L1 = self.criterionL1(self.generated_images, self.gt_images) * self.opt.lambda_L1
@@ -139,14 +139,13 @@ class MFNetModel(BaseModel):
         self.loss_sty_embed = self.criterionL1(self.sty_fea, self.sty_fea_fake)
         self.enc_consistency_loss = 0.2*self.loss_cnt_embed + 0.2*self.loss_sty_embed
 
-        # # ===== Generator reconstruction loss ===== #
-        # # G(Ic, Ic) = Ic and G(Is, Is) = Is
-        # self.G_rec_cnt_loss = self.criterionL1(self.generated_images_from_cnt, self.content_images)
-        # self.G_rec_sty_loss = self.criterionL1(self.generated_images_from_sty, self.style_images[:, 0:1])
-        # self.G_rec_loss = 0.1*self.G_rec_cnt_loss + 0.1*self.G_rec_sty_loss
+        # ===== Domain reconstruction loss ===== #
+        # G(Ic, Ic) = Ic and G(Is, Is) = Is
+        self.G_rec_cnt_loss = self.criterionL1(self.generated_images_from_cnt, self.content_images)
+        self.G_rec_sty_loss = self.criterionL1(self.generated_images_from_sty, self.style_images[:, 0:1])
+        self.G_rec_loss = 0.1*self.G_rec_cnt_loss + 0.1*self.G_rec_sty_loss
 
         # ===== Complexity indicator loss ===== #
-
         self.loss_complex_ind = self.criterionCI(self.alpha1.squeeze(), (~self.content_lan.bool()).float()) + \
                                 self.criterionCI(self.alpha2.squeeze(), self.content_lan.float())
 
@@ -164,10 +163,10 @@ class MFNetModel(BaseModel):
             self.optimizer_D_content.step()
             self.optimizer_D_style.step()
         else:
-            self.set_requires_grad(self.netD, True)      # enable backprop for D
-            self.optimizer_D.zero_grad()             # set D's gradients to zero
-            self.backward_D()                    # calculate gradients for D
-            self.optimizer_D.step()                # update D's weights
+            self.set_requires_grad(self.netD, True)         # enable backprop for D
+            self.optimizer_D.zero_grad()                    # set D's gradients to zero
+            self.backward_D()                               # calculate gradients for D
+            self.optimizer_D.step()                         # update D's weights
         # update G
         if self.dis_2:
             self.set_requires_grad([self.netD_content, self.netD_style], False)
