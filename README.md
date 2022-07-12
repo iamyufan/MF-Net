@@ -6,9 +6,11 @@
 
 by [Yufan Zhang](https://yufanz.xyz), [Junkai Man](https://junkaiman.com) & Peng Sun
 
-![1](./img/first.png)
+![1](./img/1_overall.png)
 
 ---
+
+## Supplementary resources
 
 Subjective evaluation survey - [Results](analysis/survey)
 
