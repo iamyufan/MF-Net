@@ -14,6 +14,14 @@ Subjective evaluation survey - [Results](analysis/survey)
 
 ---
 
+## Gallery
+
+![4](./img/4_seen_lan_vis.png)
+
+![5](./img/5_unseen_lan_vis.png)
+
+---
+
 ## Acknowledgements
 
 Code derived and reshaped from [FTransGAN](https://github.com/ligoudaner377/font_translator_gan).
