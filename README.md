@@ -8,21 +8,15 @@ by [Yufan Zhang](https://yufanz.xyz), [Junkai Man](https://junkaiman.com) & [Pen
 
 ![1](./img/1_overall.png)
 
----
-
 ## Supplementary resources
 
 Subjective evaluation survey - [Results](analysis/survey)
-
----
 
 ## Gallery
 
 ![4](./img/4_seen_lan_vis.png)
 
 ![5](./img/5_unseen_lan_vis.png)
-
----
 
 ## Acknowledgements
 
