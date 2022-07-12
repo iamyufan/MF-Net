@@ -4,7 +4,7 @@
 
 [Accepted by ACM Multimedia 2022]
 
-by [Yufan Zhang](https://yufanz.xyz), [Junkai Man](https://junkaiman.com) & Peng Sun
+by [Yufan Zhang](https://yufanz.xyz), [Junkai Man](https://junkaiman.com) & [Peng Sun](https://scholars.duke.edu/person/Peng.Sun1)
 
 ![1](./img/1_overall.png)
 
