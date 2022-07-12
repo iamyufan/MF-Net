@@ -10,6 +10,10 @@ by [Yufan Zhang](https://yufanz.xyz), [Junkai Man](https://junkaiman.com) & Peng
 
 ---
 
-Subjective evaluation survey
+Subjective evaluation survey - [Results](analysis/survey)
 
-[Results](analysis/survet
+---
+
+## Acknowledgements
+
+Code derived and reshaped from [FTransGAN](https://github.com/ligoudaner377/font_translator_gan).
