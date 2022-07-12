@@ -4,7 +4,7 @@ from data import create_dataset
 from models import create_model
 from util.visualizer import save_images
 from util import html
-
+import time
 
 if __name__ == '__main__':
     opt = TestOptions().parse()  # get test options
@@ -20,6 +20,9 @@ if __name__ == '__main__':
     if opt.load_iter > 0:  # load_iter is 0 by default
         web_dir = '{:s}_iter{:d}'.format(web_dir, opt.load_iter)
     print('creating web directory', web_dir)
+    if not os.path.exists(web_dir):
+        os.makedirs(web_dir)
+    latency = open(os.path.join(web_dir, 'latency.txt'), 'w')
     webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
     # test with eval mode. This only affects layers like batchnorm and dropout.
     if opt.eval:
@@ -28,7 +31,10 @@ if __name__ == '__main__':
         #if i >= opt.num_test:  # only apply our model to opt.num_test images.
         #    break
         model.set_input(data)  # unpack data from data loader
+        startTime = time.time()
         model.test()           # run inference
+        endTime = time.time()
+        latency.write(str(i) + '|' + str(endTime - startTime) + '\n')
         visuals = model.get_current_visuals()  # get image results
         img_path = model.get_image_paths()     # get image paths
         if i % 1000 == 0:  # save images to an HTML file
