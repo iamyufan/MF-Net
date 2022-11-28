@@ -30,7 +30,15 @@ Subjective evaluation survey - [Results](analysis/survey)
 
 ## Presentation
 
-Video presentation - [Slides](presentation/cover.png)
+Video presentation
+
+[![cover](presentation/cover.png)](https://youtu.be/YVkbaq7vZTA)
+
+Video presentation - [Slides](presentation/slides.pdf)
+
+Poster presentation
+
+![poster](presentation/poster.png)
 
 ## Acknowledgements
 
