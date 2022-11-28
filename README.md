@@ -36,9 +36,7 @@ Video presentation
 
 Video presentation - [Slides](presentation/slides.pdf)
 
-Poster presentation
-
-![poster](presentation/poster.png)
+Poster presentation - [Poster](presentation/poster.png)
 
 ## Acknowledgements
 
