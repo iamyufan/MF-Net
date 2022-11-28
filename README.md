@@ -18,7 +18,13 @@ Check out the paper on ACM Digital Library: [https://doi.org/10.1145/3503161.354
 
 Subjective evaluation survey - [Results](analysis/survey)
 
-## Results gallery
+## Project gallery
+
+### Network structure
+
+![1](./img/1_overall.png)
+
+### Results
 
 ![4](./img/4_seen_lan_vis.png)
 
