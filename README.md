@@ -34,7 +34,7 @@ Video presentation
 
 [![cover](presentation/cover.png)](https://youtu.be/YVkbaq7vZTA)
 
-Video presentation - [Slides](presentation/slides.pdf)
+Video presentation - [Slides](presentation/mfnet.pdf)
 
 Poster presentation - [Poster](presentation/poster.png)
 
